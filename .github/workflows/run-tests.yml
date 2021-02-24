@@ -133,7 +133,7 @@ jobs:
           pylint plotting
 
   vulture:
-    name: vulture
+    name: Vulture
     runs-on: ubuntu-18.04
     strategy:
       fail-fast: false
