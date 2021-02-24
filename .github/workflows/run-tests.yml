@@ -155,4 +155,5 @@ jobs:
 
       - uses: ./.github/actions/build-autoreduction
 
-      run: vulture --min-confidence 100 WebApp build docker_reduction model monitors plotting queue_processors scripts systemtests utils
+      - name: Vulture inspection
+        run: vulture --min-confidence 100 WebApp build docker_reduction model monitors plotting queue_processors scripts systemtests utils
