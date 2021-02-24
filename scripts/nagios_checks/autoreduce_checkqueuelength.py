@@ -32,7 +32,6 @@ def checkQueueLength(warning, critical):
         r = requests.get(ACTIVEMQ_URL + ",destinationName=" + queue + "/QueueSize", auth=ACTIVEMQ_AUTH)
 
         queue_length = r.json()['value']
-        # print(queue + " length = " + str(queue_length))
 
         if queue_length > warning:
             print(queue + " queue getting big " + str(queue_length))
@@ -43,6 +42,4 @@ def checkQueueLength(warning, critical):
     return 0
 
 
-# pylint: disable=using-constant-test
-if "__name__":
-    sys.exit(checkQueueLength(3, 10))
+sys.exit(checkQueueLength(3, 10))
