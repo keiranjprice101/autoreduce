@@ -48,12 +48,20 @@ class ReductionRunUtils(object):
     """
     @staticmethod
     def make_kwargs_from_runvariables(reduction_run, use_value=False):
+        """
+        Create keyword arguments using the run's variables
+        """
+        if reduction_run.run_variables.count() == 0:
+            return {"standard_vars": {}, "advanced_vars": {}}
 
         return ReductionRunUtils.make_kwargs_from_variables(
             [runvar.variable for runvar in reduction_run.run_variables.all()], use_value)
 
     @staticmethod
     def make_kwargs_from_variables(variables, use_value=False):
+        """
+        Create keyword arguments using the variables
+        """
         standard_vars = {}
         advanced_vars = {}
 

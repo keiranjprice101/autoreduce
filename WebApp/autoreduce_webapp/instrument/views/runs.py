@@ -299,17 +299,11 @@ def configure_new_runs_GET(instrument_name, start=0, end=0, experiment_reference
 
     editing = (start > 0 or experiment_reference > 0)  # TODO what is this for?
 
-    try:
-        last_run = instrument.reduction_runs.exclude(status=STATUS.get_skipped()).last()
-    except AttributeError:
-        return {
-            "error":
-            "All previous runs have been skipped and they cannot be re-run. You can still submit manual runs for this instrument."
-        }
+    last_run = instrument.reduction_runs.last()
 
-    current_variables = ReductionRunUtils.make_kwargs_from_runvariables(last_run)
-    standard_vars = current_variables["standard_vars"]
-    advanced_vars = current_variables["advanced_vars"]
+    run_variables = ReductionRunUtils.make_kwargs_from_runvariables(last_run)
+    standard_vars = run_variables["standard_vars"]
+    advanced_vars = run_variables["advanced_vars"]
 
     upcoming_variables = instrument.instrumentvariable_set.filter(start_run=last_run.run_number + 1)
 
@@ -317,16 +311,19 @@ def configure_new_runs_GET(instrument_name, start=0, end=0, experiment_reference
     # Unique, comma-joined list of all start runs belonging to the upcoming variables.
     # This seems to be used to prevent submission if trying to resubmit variables for already
     # configured future run numbers - check the checkForConflicts function
-    # This should probably be done by the POST method anyway.. so remove it
-    upcoming_run_variables = ','.join(list(set([str(var.start_run) for var in upcoming_variables])))
+    # This should probably be done by the POST method anyway.. so remove it when
+    if upcoming_variables:
+        upcoming_run_variables = ','.join(list(set([str(var.start_run) for var in upcoming_variables])))
+    else:
+        upcoming_run_variables = ""
 
     try:
-        current_variables = VariableUtils.get_default_variables(instrument)
+        reduce_vars_variables = VariableUtils.get_default_variables(instrument)
     except (FileNotFoundError, ImportError, SyntaxError) as err:
         return {"message": str(err)}
 
-    current_standard_variables = current_variables["standard_vars"]
-    current_advanced_variables = current_variables["advanced_vars"]
+    current_standard_variables = reduce_vars_variables["standard_vars"]
+    current_advanced_variables = reduce_vars_variables["advanced_vars"]
     min_run_start = last_run.run_number
     run_start = min_run_start + 1 if start == 0 else start
     # experiment_reference = experiment_reference if experiment_reference>0 else last_run.experiment.reference_number
@@ -336,8 +333,8 @@ def configure_new_runs_GET(instrument_name, start=0, end=0, experiment_reference
         'last_instrument_run': last_run,
         'processing': ReductionRun.objects.filter(instrument=instrument, status=STATUS.get_processing()),
         'queued': ReductionRun.objects.filter(instrument=instrument, status=STATUS.get_queued()),
-        'standard_variables': standard_vars,
-        'advanced_variables': advanced_vars,
+        'standard_variables': standard_vars if standard_vars else current_standard_variables,
+        'advanced_variables': advanced_vars if advanced_vars else current_advanced_variables,
         'current_standard_variables': current_standard_variables,
         'current_advanced_variables': current_advanced_variables,
         'run_start': run_start,
